@@ -1,0 +1,27 @@
+{
+  "name": "uoh-marketplace",
+  "version": "1.0.0",
+  "description": "Production-style Campus Marketplace for University of Hyderabad (UoH) Students",
+  "scripts": {
+    "start": "node server/server.js",
+    "seed": "npm run seed --prefix server",
+    "test": "npm run test:api --prefix server",
+    "build": "npm run build --prefix client",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client"
+  },
+  "keywords": [
+    "university-of-hyderabad",
+    "uoh",
+    "marketplace",
+    "campus",
+    "student-marketplace",
+    "react",
+    "nodejs",
+    "postgresql",
+    "socketio",
+    "razorpay"
+  ],
+  "author": "University of Hyderabad Student Developer",
+  "license": "MIT"
+}
