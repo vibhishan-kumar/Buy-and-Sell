@@ -45,6 +45,21 @@ async function initDB() {
   pgliteInstance = new PGlite(dataDir);
   isUsingPglite = true;
   console.log(`Initialized embedded PostgreSQL (PGlite) at ${dataDir}`);
+
+  // Safe schema migration for payment_method and payment_details
+  try {
+    const alterSQL = `
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT 'CARD';
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_details TEXT;
+    `;
+    if (!isUsingPglite && pool) {
+      await pool.query(alterSQL);
+    } else if (pgliteInstance) {
+      await pgliteInstance.exec(alterSQL);
+    }
+  } catch (e) {
+    // Table may not exist yet if unseeded
+  }
 }
 
 async function query(text, params = []) {

@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ShoppingBag, Star, CheckCircle, MapPin, Receipt, ShieldCheck } from 'lucide-react';
+import {
+  ShoppingBag,
+  Star,
+  CheckCircle,
+  MapPin,
+  Receipt,
+  ShieldCheck,
+  CreditCard,
+  Smartphone,
+  Building2,
+  Handshake,
+  ExternalLink
+} from 'lucide-react';
 import { api } from '../services/api';
 import ReviewModal from '../components/ReviewModal';
+import InvoiceModal from '../components/InvoiceModal';
 
 export default function Orders() {
   const [searchParams] = useSearchParams();
@@ -10,6 +23,7 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reviewingOrder, setReviewingOrder] = useState(null);
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
 
   const fetchOrders = async (role) => {
     setLoading(true);
@@ -26,6 +40,128 @@ export default function Orders() {
   useEffect(() => {
     fetchOrders(activeTab);
   }, [activeTab]);
+
+  const renderPaymentBadge = (order) => {
+    let details = {};
+    if (order.payment_details) {
+      try {
+        details = typeof order.payment_details === 'string'
+          ? JSON.parse(order.payment_details)
+          : order.payment_details;
+      } catch {
+        details = {};
+      }
+    }
+
+    const m = (order.payment_method || 'CARD').toUpperCase();
+
+    if (m === 'UPI') {
+      return (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.25rem 0.6rem',
+            background: '#f5f3ff',
+            border: '1px solid #ddd6fe',
+            color: '#7c3aed',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.75rem',
+            fontWeight: 700
+          }}
+        >
+          <Smartphone size={13} />
+          <span>{details.upiId ? `UPI: ${details.upiId}` : (details.app ? `UPI (${details.app.toUpperCase()})` : 'UPI Instant')}</span>
+        </span>
+      );
+    }
+
+    if (m === 'CARD') {
+      return (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.25rem 0.6rem',
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            color: '#2563eb',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.75rem',
+            fontWeight: 700
+          }}
+        >
+          <CreditCard size={13} />
+          <span>{details.last4 ? `${(details.brand || 'CARD').toUpperCase()} •••• ${details.last4}` : 'Card Payment'}</span>
+        </span>
+      );
+    }
+
+    if (m === 'NETBANKING') {
+      return (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.25rem 0.6rem',
+            background: '#ecfeff',
+            border: '1px solid #a5f3fc',
+            color: '#0891b2',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.75rem',
+            fontWeight: 700
+          }}
+        >
+          <Building2 size={13} />
+          <span>{details.bank || 'Net Banking'}</span>
+        </span>
+      );
+    }
+
+    if (m === 'CAMPUS_HANDOVER') {
+      return (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.25rem 0.6rem',
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
+            color: '#d97706',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.75rem',
+            fontWeight: 700
+          }}
+        >
+          <Handshake size={13} />
+          <span>Campus Handover Pay</span>
+        </span>
+      );
+    }
+
+    return (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.35rem',
+          padding: '0.25rem 0.6rem',
+          background: 'var(--bg-subtle)',
+          color: 'var(--text-secondary)',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '0.75rem',
+          fontWeight: 600
+        }}
+      >
+        <CreditCard size={13} />
+        <span>{m}</span>
+      </span>
+    );
+  };
 
   return (
     <div className="container" style={{ padding: '2.5rem 1.25rem 4rem 1.25rem' }}>
@@ -103,12 +239,10 @@ export default function Orders() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {renderPaymentBadge(order)}
                   <span className="badge badge-active" style={{ fontSize: '0.75rem' }}>
                     {order.status}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-subtle)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)' }}>
-                    Razorpay ID: {order.razorpay_payment_id || 'sandbox_verified'}
                   </span>
                 </div>
               </div>
@@ -145,33 +279,40 @@ export default function Orders() {
                   </div>
                 </div>
 
-                {/* Rating Action (For Buyer) */}
-                {activeTab === 'buyer' && (
-                  <div>
-                    {order.review_rating ? (
-                      <div style={{ background: '#fef3c7', border: '1px solid #fde68a', padding: '0.5rem 0.85rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', color: '#d97706', fontWeight: 700, fontSize: '0.85rem' }}>
-                          <Star size={14} fill="#d97706" />
-                          <span>Rated {order.review_rating} / 5</span>
-                        </div>
-                        {order.review_text && (
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            "{order.review_text}"
+                {/* Actions (Invoice Receipt & Rating) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setSelectedInvoiceOrder(order)}
+                    className="btn btn-outline btn-sm"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.82rem' }}
+                    title="View Official Campus Receipt & Gate Pass"
+                  >
+                    <Receipt size={14} color="var(--teal)" />
+                    <span>View Receipt</span>
+                  </button>
+
+                  {activeTab === 'buyer' && (
+                    <div>
+                      {order.review_rating ? (
+                        <div style={{ background: '#fef3c7', border: '1px solid #fde68a', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', color: '#d97706', fontWeight: 700, fontSize: '0.82rem' }}>
+                            <Star size={13} fill="#d97706" />
+                            <span>Rated {order.review_rating}/5</span>
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setReviewingOrder(order)}
-                        className="btn btn-outline btn-sm"
-                        style={{ color: '#d97706', borderColor: '#fde68a', background: '#fffbeb' }}
-                      >
-                        <Star size={15} />
-                        <span>Rate Seller</span>
-                      </button>
-                    )}
-                  </div>
-                )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setReviewingOrder(order)}
+                          className="btn btn-outline btn-sm"
+                          style={{ color: '#d97706', borderColor: '#fde68a', background: '#fffbeb', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.82rem' }}
+                        >
+                          <Star size={14} />
+                          <span>Rate Seller</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -186,6 +327,15 @@ export default function Orders() {
           onSuccess={() => fetchOrders('buyer')}
         />
       )}
+
+      {/* Campus Invoice / Receipt Modal */}
+      {selectedInvoiceOrder && (
+        <InvoiceModal
+          order={selectedInvoiceOrder}
+          onClose={() => setSelectedInvoiceOrder(null)}
+        />
+      )}
     </div>
   );
 }
+

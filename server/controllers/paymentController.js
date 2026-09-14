@@ -77,16 +77,18 @@ async function verifyPayment(req, res) {
       deliveryLocation = 'UoH Campus Delivery Point',
       razorpayOrderId,
       razorpayPaymentId,
-      razorpaySignature
+      razorpaySignature,
+      paymentMethod = 'CARD',
+      paymentDetails = null
     } = req.body;
 
     if (!productId || !razorpayOrderId || !razorpayPaymentId) {
       return res.status(400).json({ error: 'Missing required payment verification details.' });
     }
 
-    // Verify signature
+    // Verify signature (supports real Razorpay HMAC, sandbox signatures, and campus handover)
     const isValidSignature = verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
-    if (!isValidSignature) {
+    if (!isValidSignature && paymentMethod !== 'CAMPUS_HANDOVER') {
       return res.status(400).json({ error: 'Payment signature verification failed. Untrusted transaction.' });
     }
 
@@ -137,11 +139,15 @@ async function verifyPayment(req, res) {
 
     const order = orderRes.rows[0];
 
-    // 3. Record Payment
+    // 3. Record Payment with payment method and details
+    const detailsString = typeof paymentDetails === 'object' && paymentDetails !== null
+      ? JSON.stringify(paymentDetails)
+      : (paymentDetails || null);
+
     await client.query(
-      `INSERT INTO payments (order_id, razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, currency, payment_status)
-       VALUES ($1, $2, $3, $4, $5, 'INR', 'SUCCESS')`,
-      [order.id, razorpayOrderId, razorpayPaymentId, razorpaySignature, totalAmount]
+      `INSERT INTO payments (order_id, razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, currency, payment_status, payment_method, payment_details)
+       VALUES ($1, $2, $3, $4, $5, 'INR', 'SUCCESS', $6, $7)`,
+      [order.id, razorpayOrderId, razorpayPaymentId, razorpaySignature, totalAmount, paymentMethod.toUpperCase(), detailsString]
     );
 
     // Commit transaction
@@ -152,7 +158,7 @@ async function verifyPayment(req, res) {
       userId: product.seller_id,
       type: 'PRODUCT_SOLD',
       title: 'Item Sold!',
-      message: `Your listing "${product.name}" was purchased by ${req.user.name} for ₹${price}.`,
+      message: `Your listing "${product.name}" was purchased by ${req.user.name} for ₹${price} via ${paymentMethod}.`,
       link: `/orders?id=${order.id}`
     });
 
@@ -161,7 +167,7 @@ async function verifyPayment(req, res) {
       userId: buyerId,
       type: 'PAYMENT_SUCCESS',
       title: 'Order Confirmed!',
-      message: `Payment of ₹${totalAmount} successful for "${product.name}". Order #${orderNumber}.`,
+      message: `Payment of ₹${totalAmount} successful for "${product.name}" via ${paymentMethod}. Order #${orderNumber}.`,
       link: `/orders?id=${order.id}`
     });
 
@@ -173,7 +179,9 @@ async function verifyPayment(req, res) {
       order: {
         ...order,
         product_name: product.name,
-        payment_id: razorpayPaymentId
+        payment_id: razorpayPaymentId,
+        payment_method: paymentMethod.toUpperCase(),
+        payment_details: detailsString
       }
     });
   } catch (err) {
@@ -220,6 +228,8 @@ async function getUserOrders(req, res) {
         seller.name AS seller_name,
         seller.email AS seller_email,
         pay.razorpay_payment_id,
+        pay.payment_method,
+        pay.payment_details,
         r.id AS review_id,
         r.rating AS review_rating,
         r.review_text
@@ -276,6 +286,8 @@ async function getOrderById(req, res) {
         seller.phone AS seller_phone,
         pay.razorpay_payment_id,
         pay.payment_status,
+        pay.payment_method,
+        pay.payment_details,
         r.id AS review_id,
         r.rating AS review_rating,
         r.review_text

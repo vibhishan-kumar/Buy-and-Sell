@@ -149,6 +149,8 @@ CREATE TABLE payments (
     amount NUMERIC(10, 2) NOT NULL,
     currency VARCHAR(10) DEFAULT 'INR',
     payment_status VARCHAR(30) NOT NULL,
+    payment_method VARCHAR(50) DEFAULT 'CARD',
+    payment_details TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

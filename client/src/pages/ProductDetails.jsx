@@ -16,8 +16,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
-import CheckoutModal from '../components/CheckoutModal';
+import PaymentModal from '../components/PaymentModal';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -382,9 +381,9 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {/* Checkout Modal */}
+      {/* Amazon-Style Multi-Payment Modal */}
       {showCheckout && (
-        <CheckoutModal
+        <PaymentModal
           product={product}
           onClose={() => setShowCheckout(false)}
           onSuccess={(order) => {

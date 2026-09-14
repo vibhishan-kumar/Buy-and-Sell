@@ -685,3 +685,32 @@ button, input, select, textarea {
 .table tr:hover td {
   background-color: #f8fafc;
 }
+
+/* Print Stylesheet for Campus Invoices */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .invoice-printable, .invoice-printable * {
+    visibility: visible;
+  }
+  .invoice-printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .modal-overlay {
+    background: none !important;
+    position: static !important;
+  }
+}
+

@@ -514,7 +514,9 @@ async function getAllOrders(req, res) {
         seller.email AS seller_email,
         pay.razorpay_order_id,
         pay.razorpay_payment_id,
-        pay.payment_status
+        pay.payment_status,
+        pay.payment_method,
+        pay.payment_details
       FROM orders o
       JOIN products p ON o.product_id = p.id
       JOIN users buyer ON o.buyer_id = buyer.id
