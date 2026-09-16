@@ -46,13 +46,6 @@ export default function Login() {
     }
   };
 
-  // Quick fill helper for review and testing
-  const fillCredentials = (demoEmail, demoPassword) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setErrorMsg('');
-  };
-
   return (
     <div style={{ padding: '3.5rem 1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 12rem)' }}>
       <div className="card" style={{ width: '100%', maxWidth: '440px', padding: '2rem' }}>
@@ -170,42 +163,6 @@ export default function Login() {
             <ArrowRight size={18} />
           </button>
         </form>
-
-        {/* Quick-Fill Testing Helper */}
-        <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px dashed var(--border)' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.6rem', textAlign: 'center' }}>
-            Quick Demo Accounts
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={() => fillCredentials('vibhishan.kumar@uohyd.ac.in', 'Student@123')}
-              style={{ justifyContent: 'space-between', fontSize: '0.78rem' }}
-            >
-              <span>Student: Vibhishan (SCIS)</span>
-              <span style={{ color: 'var(--teal)' }}>Fill</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={() => fillCredentials('25mca01@uohyd.ac.in', 'Student@123')}
-              style={{ justifyContent: 'space-between', fontSize: '0.78rem' }}
-            >
-              <span>Student: MCA 2025</span>
-              <span style={{ color: 'var(--teal)' }}>Fill</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={() => fillCredentials('admin@uohyd.ac.in', 'Admin@123')}
-              style={{ justifyContent: 'space-between', fontSize: '0.78rem', borderColor: '#fca5a5', background: '#fef2f2', color: '#b91c1c' }}
-            >
-              <span>Admin: Campus Office</span>
-              <span style={{ fontWeight: 700 }}>Fill</span>
-            </button>
-          </div>
-        </div>
 
         {/* Register Link */}
         <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
